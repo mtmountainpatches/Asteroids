@@ -126,7 +126,7 @@ function newGame(W: number, H: number, best = 0): G {
 function applyPup(g: G, id: PupId) {
   const cfg = PUPS.find(p => p.id === id)!
   g.floats.push({ x: g.ship.x, y: g.ship.y - 30, text: PUP_LABELS[id], life: 1.5 })
-  if (id === 'extralife')  { g.lives++;                           return }
+  if (id === 'extralife')  { g.lives++; g.floats.push({ x: g.ship.x, y: g.ship.y - 60, text: `LIVES: ${g.lives}`, life: 2 }); return }
   if (id === 'shield')     { g.shield = Math.min(g.shield + 10, 10); return }
   if (id === 'hyperspace') { g.hyper  = Math.min(g.hyper  + 1, 3);  return }
   if (id === 'bomb')       { g.bombs  = Math.min(g.bombs  + 1, 2);  return }
@@ -259,6 +259,8 @@ function tick(g: G, dt: number, W: number, H: number, keys: Set<string>) {
       if (dist(sh.x, sh.y, r.x, r.y) < r.r + 10) {
         if (g.shieldOn && g.shield > 0) {
           g.shield = Math.max(0, g.shield - 2)  // impact drains 2 extra seconds of energy
+          sh.invuln = Math.max(sh.invuln, 1.2)  // grace period so ship escapes before next collision check
+          g.floats.push({ x: sh.x, y: sh.y - 30, text: 'SHIELD BLOCK!', life: 0.8 })
           break
         }
         g.lives--
@@ -404,7 +406,7 @@ function render(ctx: CanvasRenderingContext2D, g: G, W: number, H: number, t: nu
 
   // Shield ring: cyan glow around ship, pulses faster when actively held
   if (g.shield > 0) {
-    const alpha  = g.shieldOn ? 0.5 + 0.35 * Math.sin(t * 14) : 0.2
+    const alpha  = g.shieldOn ? 0.5 + 0.35 * Math.sin(t * 14) : 0.4
     const radius = 26 + (g.shieldOn ? 1.5 * Math.sin(t * 12) : 0)
     ctx.save()
     ctx.strokeStyle = `rgba(80,210,255,${alpha})`
