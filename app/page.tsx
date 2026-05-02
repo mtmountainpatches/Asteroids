@@ -160,12 +160,12 @@ function tick(g: G, dt: number, W: number, H: number, keys: Set<string>) {
   sh.invuln   = Math.max(0, sh.invuln   - dt)
   sh.cooldown = Math.max(0, sh.cooldown - dt)
 
-  // Shield: hold Shift to activate; suppresses firing (the trade-off)
+  // Shield: passive protection — just having energy absorbs hits automatically.
+  // Holding Shift shows the active glow ring (cosmetic only).
   g.shieldOn = (keys.has('ShiftLeft') || keys.has('ShiftRight')) && g.shield > 0
-  if (g.shieldOn) g.shield = Math.max(0, g.shield - dt)
 
-  // Fire — blocked while shield is active
-  if (keys.has('Space') && sh.cooldown === 0 && !g.shieldOn) {
+  // Fire — always allowed regardless of shield state
+  if (keys.has('Space') && sh.cooldown === 0) {
     sh.cooldown = g.fx.has('rapid') ? FIRE_CD / 2 : FIRE_CD
     const makeBullet = (off: number): Bullet => ({
       x:  sh.x + Math.cos(sh.angle + off) * 20,
@@ -257,7 +257,7 @@ function tick(g: G, dt: number, W: number, H: number, keys: Set<string>) {
   if (sh.invuln === 0) {
     for (const r of g.rocks) {
       if (dist(sh.x, sh.y, r.x, r.y) < r.r + 10) {
-        if (g.shieldOn && g.shield > 0) {
+        if (g.shield > 0) {
           g.shield = Math.max(0, g.shield - 2)  // impact drains 2 extra seconds of energy
           sh.invuln = Math.max(sh.invuln, 1.2)  // grace period so ship escapes before next collision check
           g.floats.push({ x: sh.x, y: sh.y - 30, text: 'SHIELD BLOCK!', life: 0.8 })
